@@ -7,3 +7,4 @@ tags
 dist/
 .cask/
 emacs_backtrace.*
+*-autoloads.el

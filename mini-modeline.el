@@ -83,9 +83,9 @@
 
 (defface mini-modeline-mode-line
   '((((background light))
-     :background "#55ced1" :height 0.14 :box nil)
+     :background "#55ced1" :height 0.1 :box nil)
     (t
-     :background "#008b8b" :height 0.14 :box nil))
+     :background "#008b8b" :height 0.1 :box nil))
   "Modeline face for active window."
   :group 'mini-modeline)
 
@@ -209,12 +209,24 @@ When ARG is:
                   ;; Showing mini-modeline
                   (if (eq arg 'clear)
                       (setq modeline-content nil)
-                    (setq modeline-content
-                          (mini-modeline--multi-lr-render
-                           (if mini-modeline--msg
-                               (format-mode-line '(:eval (mini-modeline-msg)))
-                             (format-mode-line l-fmt))
-                           (format-mode-line r-fmt)))
+                    (let ((l-fmted (format-mode-line l-fmt))
+                          (r-fmted (format-mode-line r-fmt)))
+                      (setq modeline-content
+                            (mini-modeline--multi-lr-render
+                             (if mini-modeline--msg
+                                 ;; (format-mode-line '(:eval (mini-modeline-msg)))
+                                 (format-mode-line (append l-fmt
+                                                           (list
+                                                            " "
+                                                            (mini-modeline--msg-split
+                                                             (- (frame-width)
+                                                                2
+                                                                (length l-fmted)
+                                                                (length r-fmted))))))
+                               (format-mode-line l-fmt))
+                             (format-mode-line r-fmt)))
+                      )
+
                     (setq mini-modeline--last-update (current-time)))
 
                   ;; write to minibuffer
@@ -236,6 +248,15 @@ When ARG is:
                         (insert (car mini-modeline--cache))))))))))
       ((error debug)
        (mini-modeline--log "mini-modeline: %s\n" err)))))
+
+(defun mini-modeline--msg-split (width)
+  "Place holder to display echo area message."
+  (when mini-modeline--msg
+    (replace-regexp-in-string
+     "%" "%%"
+     (if (> (length mini-modeline--msg) width)
+         (format "%s%s" (substring mini-modeline--msg 0 (- width (length "..."))) "...")
+       mini-modeline--msg))))
 
 (defun mini-modeline-msg ()
   "Place holder to display echo area message."
@@ -366,9 +387,9 @@ BODY will be supplied with orig-func and args."
 
   (setq mini-modeline--orig-resize-mini-windows resize-mini-windows)
   (setq resize-mini-windows nil)
+  (add-hook 'pre-redisplay-functions #'mini-modeline-display)
   (redisplay)
-  ;; (add-hook 'pre-redisplay-functions #'mini-modeline-display)
-  (setq mini-modeline--timer (run-with-timer 0 0.1 #'mini-modeline-display))
+  ;; (setq mini-modeline--timer (run-with-idle-timer 0.1 t #'mini-modeline-display))
   (advice-add #'message :around #'mini-modeline--reroute-msg)
 
   (add-hook 'minibuffer-setup-hook #'mini-modeline--enter-minibuffer)
@@ -430,7 +451,7 @@ BODY will be supplied with orig-func and args."
   (setq resize-mini-windows mini-modeline--orig-resize-mini-windows)
   (redisplay)
   ;; (remove-hook 'post-command-hook #'mini-modeline-display)
-  ;; (remove-hook 'pre-redisplay-functions #'mini-modeline-display)
+  (remove-hook 'pre-redisplay-functions #'mini-modeline-display)
   (when (timerp mini-modeline--timer) (cancel-timer mini-modeline--timer))
   (mini-modeline-display 'clear)
   (advice-remove #'message #'mini-modeline--reroute-msg)
