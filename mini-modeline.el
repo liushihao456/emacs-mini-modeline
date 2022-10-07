@@ -32,7 +32,6 @@
 (require 'dash)
 (require 'frame)
 (require 'timer)
-(require 'face-remap)
 
 (eval-when-compile
   (require 'subr-x)
@@ -66,18 +65,8 @@
   :type `(repeat symbol)
   :group 'mini-modeline)
 
-(defcustom mini-modeline-face-attr `(:background ,(face-attribute 'mode-line :background))
-  "Plist of face attribute/value pair for mini-modeline."
-  :type '(plist)
-  :group 'mini-modeline)
-
 (defcustom mini-modeline-truncate-p t
   "Truncates mini-modeline or not."
-  :type 'boolean
-  :group 'mini-modeline)
-
-(defcustom mini-modeline-enhance-visual t
-  "Enhance minibuffer and window's visibility."
   :type 'boolean
   :group 'mini-modeline)
 
@@ -97,12 +86,18 @@
   "Modeline face for inactive window."
   :group 'mini-modeline)
 
+(defface mini-modeline--orig-mode-line-face
+  nil
+  "Original mode line face."
+  :group 'mini-modeline)
+
+(defface mini-modeline--orig-mode-line-inactive-face
+  nil
+  "Original mode line inactive face."
+  :group 'mini-modeline)
+
 (defvar-local mini-modeline--orig-mode-line mode-line-format)
 (defvar mini-modeline--echo-keystrokes echo-keystrokes)
-(defvar mini-modeline--orig-mode-line-remap
-  (or (alist-get 'mode-line face-remapping-alist) 'mode-line))
-(defvar mini-modeline--orig-mode-line-inactive-remap
-  (or (alist-get 'mode-line-inactive face-remapping-alist) 'mode-line-inactive))
 
 (defcustom mini-modeline-echo-duration 2
   "Duration to keep display echo."
@@ -143,12 +138,6 @@ Set this to the minimal value that doesn't cause truncation."
 (defvar mini-modeline--cache nil)
 (defvar mini-modeline--command-state 'begin
   "The state of current executed command begin -> [exec exec-read] -> end.")
-
-(defvar-local mini-modeline--face-cookie nil)
-(defun mini-modeline--set-buffer-face ()
-  "Set buffer default face for current buffer."
-  (setq mini-modeline--face-cookie
-        (face-remap-add-relative 'default mini-modeline-face-attr)))
 
 (defun mini-modeline--log (&rest args)
   "Log message into message buffer with ARGS as same parameters in `message'."
@@ -329,15 +318,10 @@ BODY will be supplied with orig-func and args."
 (defvar mini-modeline--orig-resize-mini-windows resize-mini-windows)
 (defsubst mini-modeline--enter-minibuffer ()
   "`minibuffer-setup-hook' of mini-modeline."
-  (when mini-modeline-enhance-visual
-    (mini-modeline--set-buffer-face))
   (setq resize-mini-windows 'grow-only))
 
 (defsubst mini-modeline--exit-minibuffer ()
   "`minibuffer-exit-hook' of mini-modeline."
-  (when mini-modeline-enhance-visual
-    (with-current-buffer mini-modeline--minibuffer
-      (mini-modeline--set-buffer-face)))
   (setq resize-mini-windows nil))
 
 (declare-function anzu--cons-mode-line "ext:anzu")
@@ -352,38 +336,13 @@ BODY will be supplied with orig-func and args."
   (setq-default mode-line-format (when (and mini-modeline-display-gui-line
                                             (display-graphic-p))
                                    '(" ")))
-  ;; Do the same thing with opening buffers.
-  (mapc
-   (lambda (buf)
-     (with-current-buffer buf
-       (when (local-variable-p 'mode-line-format)
-         (setq mini-modeline--orig-mode-line mode-line-format)
-         (setq mode-line-format (when (and mini-modeline-display-gui-line
-                                           (display-graphic-p))
-                                  '(" "))))
-       (when (and mini-modeline-enhance-visual
-                  (or (minibufferp buf)
-                      (string-prefix-p " *Echo Area" (buffer-name))))
-         (mini-modeline--set-buffer-face))
-       ;; Make the modeline in GUI a thin bar.
-       (when (and mini-modeline-display-gui-line
-                  (local-variable-p 'face-remapping-alist)
-                  (display-graphic-p))
-         (setf (alist-get 'mode-line face-remapping-alist)
-               'mini-modeline-mode-line
-               (alist-get 'mode-line-inactive face-remapping-alist)
-               'mini-modeline-mode-line-inactive))))
-   (buffer-list))
 
-  ;; Make the modeline in GUI a thin bar.
   (when (and mini-modeline-display-gui-line
              (display-graphic-p))
-    (let ((face-remaps (default-value 'face-remapping-alist)))
-      (setf (alist-get 'mode-line face-remaps)
-            'mini-modeline-mode-line
-            (alist-get 'mode-line-inactive face-remaps)
-            'mini-modeline-mode-line-inactive
-            (default-value 'face-remapping-alist) face-remaps)))
+    (copy-face 'mode-line 'mini-modeline--orig-mode-line-face)
+    (copy-face 'mode-line-inactive 'mini-modeline--orig-mode-line-inactive-face)
+    (copy-face 'mini-modeline-mode-line 'mode-line)
+    (copy-face 'mini-modeline-mode-line-inactive 'mode-line-inactive))
 
   (setq mini-modeline--orig-resize-mini-windows resize-mini-windows)
   (setq resize-mini-windows nil)
@@ -425,28 +384,11 @@ BODY will be supplied with orig-func and args."
 (defun mini-modeline--disable ()
   "Disable `mini-modeline'."
   (setq-default mode-line-format (default-value 'mini-modeline--orig-mode-line))
-  (when (display-graphic-p)
-    (let ((face-remaps (default-value 'face-remapping-alist)))
-      (setf (alist-get 'mode-line face-remaps)
-            mini-modeline--orig-mode-line-remap
-            (alist-get 'mode-line-inactive face-remaps)
-            mini-modeline--orig-mode-line-inactive-remap
-            (default-value 'face-remapping-alist) face-remaps)))
 
-  (mapc
-   (lambda (buf)
-     (with-current-buffer buf
-       (when (local-variable-p 'mode-line-format)
-         (setq mode-line-format mini-modeline--orig-mode-line))
-       (when mini-modeline--face-cookie
-         (face-remap-remove-relative mini-modeline--face-cookie))
-       (when (and (local-variable-p 'face-remapping-alist)
-                  (display-graphic-p))
-         (setf (alist-get 'mode-line face-remapping-alist)
-               mini-modeline--orig-mode-line-remap
-               (alist-get 'mode-line-inactive face-remapping-alist)
-               mini-modeline--orig-mode-line-inactive-remap))))
-   (buffer-list))
+  (when (and mini-modeline-display-gui-line
+             (display-graphic-p))
+    (copy-face 'mini-modeline--orig-mode-line-face 'mode-line)
+    (copy-face 'mini-modeline--orig-mode-line-inactive-face 'mode-line-inactive))
 
   (setq resize-mini-windows mini-modeline--orig-resize-mini-windows)
   (redisplay)
