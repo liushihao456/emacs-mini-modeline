@@ -96,6 +96,11 @@
   "Original mode line inactive face."
   :group 'mini-modeline)
 
+(defface mini-modeline--orig-header-line-face
+  nil
+  "Original header line face."
+  :group 'mini-modeline)
+
 (defvar-local mini-modeline--orig-mode-line mode-line-format)
 (defvar mini-modeline--echo-keystrokes echo-keystrokes)
 
@@ -341,6 +346,9 @@ BODY will be supplied with orig-func and args."
              (display-graphic-p))
     (copy-face 'mode-line 'mini-modeline--orig-mode-line-face)
     (copy-face 'mode-line-inactive 'mini-modeline--orig-mode-line-inactive-face)
+    (when (eq (face-attribute 'header-line :inherit) 'mode-line)
+      (copy-face 'header-line 'mini-modeline--orig-header-line-face)
+      (copy-face 'mode-line 'header-line))
     (copy-face 'mini-modeline-mode-line 'mode-line)
     (copy-face 'mini-modeline-mode-line-inactive 'mode-line-inactive))
 
@@ -388,7 +396,10 @@ BODY will be supplied with orig-func and args."
   (when (and mini-modeline-display-gui-line
              (display-graphic-p))
     (copy-face 'mini-modeline--orig-mode-line-face 'mode-line)
-    (copy-face 'mini-modeline--orig-mode-line-inactive-face 'mode-line-inactive))
+    (copy-face 'mini-modeline--orig-mode-line-inactive-face 'mode-line-inactive)
+    (unless (internal-lisp-face-empty-p 'mini-modeline--orig-header-line-face)
+      (copy-face 'mini-modeline--orig-header-line-face 'header-line)
+      (setq mini-modeline--orig-header-line-face nil)))
 
   (setq resize-mini-windows mini-modeline--orig-resize-mini-windows)
   (redisplay)
