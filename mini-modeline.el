@@ -209,18 +209,20 @@ When ARG is:
                       (setq modeline-content
                             (mini-modeline--multi-lr-render
                              (if mini-modeline--msg
-                                 ;; (format-mode-line '(:eval (mini-modeline-msg)))
-                                 (format-mode-line (append l-fmt
-                                                           (list
-                                                            " "
-                                                            (mini-modeline--msg-split
-                                                             (- (frame-width)
-                                                                2
-                                                                (length l-fmted)
-                                                                (length r-fmted))))))
-                               (format-mode-line l-fmt))
-                             (format-mode-line r-fmt)))
-                      )
+                                 (let* ((truncated-msg (mini-modeline-truncate-str
+                                                        mini-modeline--msg
+                                                        ;; Here 10 means to keep " 0 [10%]"
+                                                        (- (frame-width) 2 10
+                                                           (length r-fmted))))
+                                        (truncated-l-fmt (mini-modeline-truncate-str
+                                                          l-fmted
+                                                          (- (frame-width) 2
+                                                             (length truncated-msg)
+                                                             (length r-fmted))
+                                                          "..")))
+                                   (concat truncated-l-fmt " " truncated-msg))
+                               l-fmted)
+                             r-fmted)))
 
                     (setq mini-modeline--last-update (current-time)))
 
@@ -244,14 +246,19 @@ When ARG is:
       ((error debug)
        (mini-modeline--log "mini-modeline: %s\n" err)))))
 
-(defun mini-modeline--msg-split (width)
-  "Place holder to display echo area message."
-  (when mini-modeline--msg
-    (replace-regexp-in-string
-     "%" "%%"
-     (if (> (length mini-modeline--msg) width)
-         (format "%s%s" (substring mini-modeline--msg 0 (- width (length "..."))) "...")
-       mini-modeline--msg))))
+(defun mini-modeline--escape-for-format-mode-line (str)
+  "Escape STR for passing it to `format-mode-line'.
+
+In details, the percent sign '%' is replaced with '%%'."
+  (replace-regexp-in-string "%" "%%" str))
+
+(defun mini-modeline-truncate-str (str width &optional ellipsis)
+  "Truncate STR to WIDTH, ending with ELLIPSIS."
+  (unless ellipsis
+    (setq ellipsis "..."))
+  (if (> (length str) width)
+         (format "%s%s" (substring str 0 (- width (length ellipsis))) ellipsis)
+       str))
 
 (defun mini-modeline-msg ()
   "Place holder to display echo area message."
