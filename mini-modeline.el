@@ -42,8 +42,9 @@
   :group 'minibuffer
   :prefix "mini-modeline-")
 
-;; Forward declaration for evil-mode-line-tag
+;; Forward declaration
 (defvar evil-mode-line-tag)
+(defvar treemacs-user-mode-line-format)
 
 (defcustom mini-modeline-l-format nil
   "Left part of mini-modeline, same format with `mode-line-format'."
@@ -365,6 +366,9 @@ BODY will be supplied with orig-func and args."
   (add-hook 'post-command-hook #'mini-modeline--post-cmd)
 
   ;; compatibility
+  ;; treemacs
+  (setq treemacs-user-mode-line-format mode-line-format)
+
   ;; anzu
   (mini-modeline--wrap
    anzu--cons-mode-line
@@ -415,6 +419,8 @@ BODY will be supplied with orig-func and args."
   (remove-hook 'post-command-hook #'mini-modeline--post-cmd)
 
   ;; compatibility
+  (setq treemacs-user-mode-line-format nil)
+
   (advice-remove #'anzu--cons-mode-line 'mini-modeline--anzu--cons-mode-line)
   (advice-remove #'anzu--reset-mode-line 'mini-modeline--anzu--reset-mode-line)
 
