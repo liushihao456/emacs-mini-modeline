@@ -211,7 +211,7 @@ When ARG is:
                              (if mini-modeline--msg
                                  (let* ((truncated-msg (mini-modeline-truncate-str
                                                         mini-modeline--msg
-                                                        ;; Here 10 means to keep " 0 [10%]"
+                                                        ;; Here 10 means to keep " * [10%]"
                                                         (- (frame-width) 2 10
                                                            (length r-fmted))))
                                         (truncated-l-fmt (mini-modeline-truncate-str
@@ -257,8 +257,8 @@ In details, the percent sign '%' is replaced with '%%'."
   (unless ellipsis
     (setq ellipsis "..."))
   (if (> (length str) width)
-         (format "%s%s" (substring str 0 (- width (length ellipsis))) ellipsis)
-       str))
+      (format "%s%s" (substring str 0 (- width (length ellipsis))) ellipsis)
+    str))
 
 (defun mini-modeline-msg ()
   "Place holder to display echo area message."
@@ -315,9 +315,9 @@ Return value is (STRING . LINES)."
 BODY will be supplied with orig-func and args."
   (let ((name (intern (format "mini-modeline--%s" func))))
     `(advice-add #',func :around
-                 (lambda (orig-func &rest args)
-                   ,@body)
-                 '((name . ,name)))))
+      (lambda (orig-func &rest args)
+        ,@body)
+      '((name . ,name)))))
 
 (defsubst mini-modeline--pre-cmd ()
   "Pre command hook of mini-modeline."
