@@ -209,19 +209,20 @@ When ARG is:
                       (setq modeline-content
                             (mini-modeline--multi-lr-render
                              (if mini-modeline--msg
-                                 (let* ((truncated-msg (propertize
-                                                        (mini-modeline-truncate-str
-                                                         mini-modeline--msg
-                                                         ;; Here 10 means to keep " * [10%]"
-                                                         (- (frame-width) 2 10
-                                                            (length r-fmted)))
-                                                        'face '(:underline t)))
+                                 (let* ((truncated-msg (mini-modeline-truncate-str
+                                                        mini-modeline--msg
+                                                        ;; Here 10 means to keep " * [10%]"
+                                                        (- (frame-width) 2 10
+                                                           (length r-fmted))))
                                         (truncated-l-fmt (mini-modeline-truncate-str
                                                           l-fmted
                                                           (- (frame-width) 2
                                                              (length truncated-msg)
                                                              (length r-fmted))
                                                           "..")))
+                                   (add-face-text-property
+                                    0 (length truncated-msg) '(:underline t) nil
+                                    truncated-msg)
                                    (concat truncated-l-fmt " " truncated-msg))
                                l-fmted)
                              r-fmted)))
