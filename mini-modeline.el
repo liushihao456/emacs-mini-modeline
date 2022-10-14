@@ -219,9 +219,10 @@ When ARG is:
                                                           (- (frame-width) 2
                                                              (length truncated-msg)
                                                              (length r-fmted))
-                                                          "..")))
+                                                          ".."))
+                                        (default-fg (face-attribute 'default :foreground)))
                                    (add-face-text-property
-                                    0 (length truncated-msg) '(:underline t) nil
+                                    0 (length truncated-msg) `(:underline ,default-fg) nil
                                     truncated-msg)
                                    (concat truncated-l-fmt " " truncated-msg))
                                l-fmted)
