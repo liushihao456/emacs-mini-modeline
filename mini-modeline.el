@@ -384,14 +384,25 @@ BODY will be supplied with orig-func and args."
   ;; anzu
   (mini-modeline--wrap
    anzu--cons-mode-line
-   (let ((mode-line-format mini-modeline-r-format))
+   (let ((mode-line-format mini-modeline-l-format))
      (apply orig-func args)
-     (setq mini-modeline-r-format mode-line-format)))
+     (setq mini-modeline-l-format mode-line-format)))
   (mini-modeline--wrap
    anzu--reset-mode-line
-   (let ((mode-line-format mini-modeline-r-format))
+   (let ((mode-line-format mini-modeline-l-format))
      (apply orig-func args)
-     (setq mini-modeline-r-format mode-line-format)))
+     (setq mini-modeline-l-format mode-line-format)))
+  ;; meow search
+  (mini-modeline--wrap
+   meow/search-setup-mode-line-indicator
+   (let ((mode-line-format mini-modeline-l-format))
+     (apply orig-func args)
+     (setq mini-modeline-l-format mode-line-format)))
+  (mini-modeline--wrap
+   meow/search-reset-mode-line-indicator
+   (let ((mode-line-format mini-modeline-l-format))
+     (apply orig-func args)
+     (setq mini-modeline-l-format mode-line-format)))
 
   ;; read-key-sequence
   (mini-modeline--wrap
