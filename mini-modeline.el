@@ -87,6 +87,22 @@
   "Modeline face for inactive window."
   :group 'mini-modeline)
 
+(defface mini-modeline-mode-line-tui
+  '((((background light))
+     :underline "#55ced1")
+    (t
+     :underline "#008b8b"))
+  "Modeline face for active window in TUI mode."
+  :group 'mini-modeline)
+
+(defface mini-modeline-mode-line-inactive-tui
+  '((((background light))
+     :underline "#dddddd")
+    (t
+     :underline "#333333"))
+  "Modeline face for inactive window in TUI mode."
+  :group 'mini-modeline)
+
 (defface mini-modeline--orig-mode-line-face
   nil
   "Original mode line face."
@@ -116,11 +132,6 @@ Nil means current selected frame."
   :type 'sexp
   :group 'mini-modeline)
 
-(defcustom mini-modeline-display-gui-line t
-  "Display thin line at the bottom of the window."
-  :type 'boolean
-  :group 'mini-modeline)
-
 (defcustom mini-modeline-right-padding 3
   "Padding to use in the right side.
 Set this to the minimal value that doesn't cause truncation."
@@ -144,6 +155,27 @@ Set this to the minimal value that doesn't cause truncation."
 (defvar mini-modeline--cache nil)
 (defvar mini-modeline--command-state 'begin
   "The state of current executed command begin -> [exec exec-read] -> end.")
+
+(defun mini-modeline--set-face (to from)
+  "Set face from FROM to TO."
+  (set-face-attribute to nil
+                      :family (face-attribute from :family)
+                      :foundry (face-attribute from :foundry)
+                      :width (face-attribute from :width)
+                      :height (face-attribute from :height)
+                      :weight (face-attribute from :weight)
+                      :slant (face-attribute from :slant)
+                      :foreground (face-attribute from :foreground)
+                      :background (face-attribute from :background)
+                      :underline (face-attribute from :underline)
+                      :overline (face-attribute from :overline)
+                      :strike-through (face-attribute from :strike-through)
+                      :box (face-attribute from :box)
+                      :inverse-video (face-attribute from :inverse-video)
+                      :stipple (face-attribute from :stipple)
+                      :extend (face-attribute from :extend)
+                      :font (face-attribute from :font)
+                      :inherit (face-attribute from :inherit)))
 
 (defun mini-modeline--log (&rest args)
   "Log message into message buffer with ARGS as same parameters in `message'."
@@ -350,19 +382,21 @@ BODY will be supplied with orig-func and args."
   "Enable `mini-modeline'."
   ;; Hide modeline for terminal, or use empty modeline for GUI.
   (setq-default mini-modeline--orig-mode-line mode-line-format)
-  (setq-default mode-line-format (when (and mini-modeline-display-gui-line
-                                            (display-graphic-p))
-                                   '(" ")))
+  (setq-default mode-line-format (if (display-graphic-p)
+                                     '(" ")
+                                   (list '(:eval (make-string (frame-text-width) ?\s)))))
 
-  (when (and mini-modeline-display-gui-line
-             (display-graphic-p))
-    (copy-face 'mode-line 'mini-modeline--orig-mode-line-face)
-    (copy-face 'mode-line-inactive 'mini-modeline--orig-mode-line-inactive-face)
-    (when (eq (face-attribute 'header-line :inherit) 'mode-line)
-      (copy-face 'header-line 'mini-modeline--orig-header-line-face)
-      (copy-face 'mode-line 'header-line))
-    (copy-face 'mini-modeline-mode-line 'mode-line)
-    (copy-face 'mini-modeline-mode-line-inactive 'mode-line-inactive))
+  (mini-modeline--set-face 'mini-modeline--orig-mode-line-face 'mode-line)
+  (mini-modeline--set-face 'mini-modeline--orig-mode-line-inactive-face 'mode-line-inactive)
+  (when (eq (face-attribute 'header-line :inherit) 'mode-line)
+    (mini-modeline--set-face 'mini-modeline--orig-header-line-face 'header-line)
+    (mini-modeline--set-face 'header-line 'mode-line))
+  (if (display-graphic-p)
+      (progn
+        (mini-modeline--set-face 'mode-line 'mini-modeline-mode-line)
+        (mini-modeline--set-face 'mode-line-inactive 'mini-modeline-mode-line-inactive))
+    (mini-modeline--set-face 'mode-line 'mini-modeline-mode-line-tui)
+    (mini-modeline--set-face 'mode-line-inactive 'mini-modeline-mode-line-inactive-tui))
 
   (setq mini-modeline--orig-resize-mini-windows resize-mini-windows)
   (setq resize-mini-windows nil)
@@ -420,13 +454,11 @@ BODY will be supplied with orig-func and args."
   "Disable `mini-modeline'."
   (setq-default mode-line-format (default-value 'mini-modeline--orig-mode-line))
 
-  (when (and mini-modeline-display-gui-line
-             (display-graphic-p))
-    (copy-face 'mini-modeline--orig-mode-line-face 'mode-line)
-    (copy-face 'mini-modeline--orig-mode-line-inactive-face 'mode-line-inactive)
-    (unless (internal-lisp-face-empty-p 'mini-modeline--orig-header-line-face)
-      (copy-face 'mini-modeline--orig-header-line-face 'header-line)
-      (setq mini-modeline--orig-header-line-face nil)))
+  (mini-modeline--set-face 'mode-line 'mini-modeline--orig-mode-line-face)
+  (mini-modeline--set-face 'mode-line-inactive 'mini-modeline--orig-mode-line-inactive-face)
+  (unless (internal-lisp-face-empty-p 'mini-modeline--orig-header-line-face)
+    (mini-modeline--set-face 'header-line 'mini-modeline--orig-header-line-face)
+    (setq mini-modeline--orig-header-line-face nil))
 
   (setq resize-mini-windows mini-modeline--orig-resize-mini-windows)
   (redisplay)
