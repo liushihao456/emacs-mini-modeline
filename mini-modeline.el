@@ -382,9 +382,7 @@ BODY will be supplied with orig-func and args."
   "Enable `mini-modeline'."
   ;; Hide modeline for terminal, or use empty modeline for GUI.
   (setq-default mini-modeline--orig-mode-line mode-line-format)
-  (setq-default mode-line-format (if (display-graphic-p)
-                                     '(" ")
-                                   (list '(:eval (make-string (frame-text-width) ?\s)))))
+  (setq-default mode-line-format '(" "))
 
   (mini-modeline--set-face 'mini-modeline--orig-mode-line-face 'mode-line)
   (mini-modeline--set-face 'mini-modeline--orig-mode-line-inactive-face 'mode-line-inactive)
