@@ -99,7 +99,7 @@
   '((((background light))
      :foreground "#dddddd" :underline "#dddddd")
     (t
-     :foreground "#333333" :underline "#333333"))
+     :foreground "#444444" :underline "#444444"))
   "Modeline face for inactive window in TUI mode."
   :group 'mini-modeline)
 
