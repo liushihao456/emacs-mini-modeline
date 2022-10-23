@@ -89,17 +89,17 @@
 
 (defface mini-modeline-mode-line-tui
   '((((background light))
-     :underline "#55ced1")
+     :foreground "#55ced1" :underline "#55ced1")
     (t
-     :underline "#008b8b"))
+     :foreground "#008b8b" :underline "#008b8b"))
   "Modeline face for active window in TUI mode."
   :group 'mini-modeline)
 
 (defface mini-modeline-mode-line-inactive-tui
   '((((background light))
-     :underline "#dddddd")
+     :foreground "#dddddd" :underline "#dddddd")
     (t
-     :underline "#333333"))
+     :foreground "#333333" :underline "#333333"))
   "Modeline face for inactive window in TUI mode."
   :group 'mini-modeline)
 
