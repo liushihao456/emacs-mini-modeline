@@ -150,6 +150,11 @@ Set this to the minimal value that doesn't cause truncation."
   :type 'number
   :group 'mini-modeline)
 
+(defcustom mini-modeline-truncate-first-line-mesasge t
+  "If t, only renders the first line of messages."
+  :type 'boolean
+  :group 'mini-modeline)
+
 (defvar mini-modeline--last-update (current-time))
 (defvar mini-modeline--last-change-size (current-time))
 (defvar mini-modeline--cache nil)
@@ -215,9 +220,8 @@ When ARG is:
                                                    mini-modeline-update-interval))
                   (when-let ((msg (or mini-modeline--msg-message (current-message))))
                     ;; Clear echo area and start new timer for echo message
-                    ;; (mini-modeline--log "msg: %s\n" msg)
-                    ;; (mini-modeline--log "from: %s\n" mini-modeline--msg-message)
                     (message nil)
+                    (setq msg (car (string-split msg "\n")))
                     (setq mini-modeline--last-echoed (current-time))
                     ;; we proritize the message from `message'
                     ;; or the message when we're not in middle of a command running.
