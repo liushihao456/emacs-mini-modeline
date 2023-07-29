@@ -104,21 +104,21 @@
   :group 'mini-modeline)
 
 (defface mini-modeline--orig-mode-line-face
-  nil
+  '((t))
   "Original mode line face."
   :group 'mini-modeline)
 
 (defface mini-modeline--orig-mode-line-inactive-face
-  nil
+  '((t))
   "Original mode line inactive face."
   :group 'mini-modeline)
 
 (defface mini-modeline--orig-header-line-face
-  nil
+  '((t))
   "Original header line face."
   :group 'mini-modeline)
 
-(defvar-local mini-modeline--orig-mode-line mode-line-format)
+(defvar mini-modeline--orig-mode-line mode-line-format)
 (defvar mini-modeline--echo-keystrokes echo-keystrokes)
 
 (defcustom mini-modeline-echo-duration 2
@@ -375,13 +375,15 @@ BODY will be supplied with orig-func and args."
 
 (declare-function anzu--cons-mode-line "ext:anzu")
 (declare-function anzu--reset-mode-line "ext:anzu")
+(declare-function meow/search-setup-mode-line-indicator nil)
+(declare-function meow/search-reset-mode-line-indicator nil)
 
 (defvar mini-modeline--timer nil)
 
 (defun mini-modeline--enable ()
   "Enable `mini-modeline'."
   ;; Hide modeline for terminal, or use empty modeline for GUI.
-  (setq-default mini-modeline--orig-mode-line mode-line-format)
+  (setq mini-modeline--orig-mode-line mode-line-format)
   (setq-default mode-line-format '(" "))
 
   (mini-modeline--set-face 'mini-modeline--orig-mode-line-face 'mode-line)
@@ -450,13 +452,13 @@ BODY will be supplied with orig-func and args."
 
 (defun mini-modeline--disable ()
   "Disable `mini-modeline'."
-  (setq-default mode-line-format (default-value 'mini-modeline--orig-mode-line))
+  ;; (setq-default mode-line-format (default-value 'mini-modeline--orig-mode-line))
+  (setq-default mode-line-format 'mini-modeline--orig-mode-line)
 
   (mini-modeline--set-face 'mode-line 'mini-modeline--orig-mode-line-face)
   (mini-modeline--set-face 'mode-line-inactive 'mini-modeline--orig-mode-line-inactive-face)
   (unless (internal-lisp-face-empty-p 'mini-modeline--orig-header-line-face)
-    (mini-modeline--set-face 'header-line 'mini-modeline--orig-header-line-face)
-    (setq mini-modeline--orig-header-line-face nil))
+    (mini-modeline--set-face 'header-line 'mini-modeline--orig-header-line-face))
 
   (setq resize-mini-windows mini-modeline--orig-resize-mini-windows)
   (redisplay)
