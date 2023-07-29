@@ -364,15 +364,6 @@ BODY will be supplied with orig-func and args."
   (setq mini-modeline--command-state 'end
         echo-keystrokes mini-modeline--echo-keystrokes))
 
-(defvar mini-modeline--orig-resize-mini-windows resize-mini-windows)
-(defsubst mini-modeline--enter-minibuffer ()
-  "`minibuffer-setup-hook' of mini-modeline."
-  (setq resize-mini-windows 'grow-only))
-
-(defsubst mini-modeline--exit-minibuffer ()
-  "`minibuffer-exit-hook' of mini-modeline."
-  (setq resize-mini-windows nil))
-
 (declare-function anzu--cons-mode-line "ext:anzu")
 (declare-function anzu--reset-mode-line "ext:anzu")
 (declare-function meow/search-setup-mode-line-indicator nil)
@@ -398,16 +389,12 @@ BODY will be supplied with orig-func and args."
     (mini-modeline--set-face 'mode-line 'mini-modeline-mode-line-tui)
     (mini-modeline--set-face 'mode-line-inactive 'mini-modeline-mode-line-inactive-tui))
 
-  (setq mini-modeline--orig-resize-mini-windows resize-mini-windows)
-  (setq resize-mini-windows nil)
   (add-hook 'pre-redisplay-functions #'mini-modeline-display)
   ;; (add-hook 'post-command-hook #'mini-modeline-display)
   (redisplay)
   ;; (setq mini-modeline--timer (run-with-idle-timer 0.1 t #'mini-modeline-display))
   (advice-add #'message :around #'mini-modeline--reroute-msg)
 
-  (add-hook 'minibuffer-setup-hook #'mini-modeline--enter-minibuffer)
-  (add-hook 'minibuffer-exit-hook #'mini-modeline--exit-minibuffer)
   (add-hook 'pre-command-hook #'mini-modeline--pre-cmd)
   (add-hook 'post-command-hook #'mini-modeline--post-cmd)
 
@@ -460,7 +447,6 @@ BODY will be supplied with orig-func and args."
   (unless (internal-lisp-face-empty-p 'mini-modeline--orig-header-line-face)
     (mini-modeline--set-face 'header-line 'mini-modeline--orig-header-line-face))
 
-  (setq resize-mini-windows mini-modeline--orig-resize-mini-windows)
   (redisplay)
   ;; (remove-hook 'post-command-hook #'mini-modeline-display)
   (remove-hook 'pre-redisplay-functions #'mini-modeline-display)
@@ -468,8 +454,6 @@ BODY will be supplied with orig-func and args."
   (mini-modeline-display 'clear)
   (advice-remove #'message #'mini-modeline--reroute-msg)
 
-  (remove-hook 'minibuffer-setup-hook #'mini-modeline--enter-minibuffer)
-  (remove-hook 'minibuffer-exit-hook #'mini-modeline--exit-minibuffer)
   (remove-hook 'pre-command-hook #'mini-modeline--pre-cmd)
   (remove-hook 'post-command-hook #'mini-modeline--post-cmd)
 
