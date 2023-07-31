@@ -221,7 +221,7 @@ When ARG is:
                   (when-let ((msg (or mini-modeline--msg-message (current-message))))
                     ;; Clear echo area and start new timer for echo message
                     (message nil)
-                    (setq msg (car (string-split msg "\n")))
+                    (setq msg (car (split-string msg "\n")))
                     (setq mini-modeline--last-echoed (current-time))
                     ;; we proritize the message from `message'
                     ;; or the message when we're not in middle of a command running.
